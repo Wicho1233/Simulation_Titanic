@@ -1,0 +1,42 @@
+{% extends 'prediction_app/base.html' %}
+
+{% block content %}
+<div class="card shadow">
+    <div class="card-body text-center">
+        {% if es_ejemplo %}
+        <div class="alert alert-info mb-3">
+            <strong>Ejemplo demostrativo</strong>
+        </div>
+        {% endif %}
+        
+        {% if survived %}
+        <div class="alert alert-success">
+            <h4 class="alert-heading">Sobreviviras</h4>
+            <p class="mb-0">Basado en tus características, tienes alta probabilidad de haber sobrevivido al Titanic.</p>
+        </div>
+        {% else %}
+        <div class="alert alert-danger">
+            <h4 class="alert-heading"> No sobrevivirías</h4>
+            <p class="mb-0">Basado en tus características, tienes baja probabilidad de haber sobrevivido al Titanic.</p>
+        </div>
+        {% endif %}
+
+        <!-- Factores que influyeron -->
+
+        <!-- Botones de acción -->
+        <div class="d-grid gap-2 d-md-block">
+            <a href="/" class="btn btn-primary btn-lg me-2">
+                <i class="fas fa-redo me-2"></i>Nueva Predicción
+            </a>
+            {% if not es_ejemplo %}
+            
+            {% endif %}
+        </div>
+
+        <!-- Información adicional -->
+        <div class="mt-4">
+          
+        </div>
+    </div>
+</div>
+{% endblock %}

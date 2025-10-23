@@ -1,0 +1,49 @@
+{% extends 'prediction_app/base.html' %}
+
+{% block content %}
+<div class="card shadow">
+    <div class="card-body">
+        {% if error_message %}
+        <div class="alert alert-danger" role="alert">
+            {{ error_message }}
+        </div>
+        {% endif %}
+
+        <form method="post">
+            {% csrf_token %}
+            
+            <div class="mb-3">
+                <label class="form-label">Clase</label>
+                {{ form.pclass }}
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label">Sexo</label>
+                {{ form.sex }}
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Edad</label>
+                {{ form.age }}
+            </div>
+            
+            <div class="mb-4">
+                <label class="form-label">Puerto de Embarque</label>
+                {{ form.embarked }}
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100 mb-3">
+                Ver Resultado
+            </button>
+            
+            <div class="d-grid gap-2">
+               
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card mt-3">
+
+</div>
+{% endblock %}
