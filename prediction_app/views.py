@@ -1,92 +1,66 @@
 import joblib
 import numpy as np
-import pandas as pd
 from django.shortcuts import render
 from .forms import TitanicForm
 
 def load_model():
-    """
-    Cargar el modelo entrenado, scaler y orden de características
-    """
+    """Cargar modelo, scaler y feature order"""
     try:
-        model = joblib.load('prediction_app/ml_model/logistic_regression_model.pkl')
-        scaler = joblib.load('prediction_app/ml_model/scaler.pkl')
-        feature_order = joblib.load('prediction_app/ml_model/feature_order.pkl')
-        print(" Modelo cargado correctamente")
+        model_path = 'prediction_app/ml_model/logistic_regression_model.pkl'
+        scaler_path = 'prediction_app/ml_model/scaler.pkl'
+        feature_path = 'prediction_app/ml_model/feature_order.pkl'
+        
+        model = joblib.load(model_path)
+        scaler = joblib.load(scaler_path)
+        feature_order = joblib.load(feature_path)
+        
+        print("✅ Modelo cargado correctamente")
         return model, scaler, feature_order
     except Exception as e:
-        print(f"Error cargando modelo: {e}")
+        print(f"❌ Error cargando modelo: {e}")
         return None, None, None
 
 def preprocess_input(pclass, sex, age, embarked):
-    """
-    Preprocesar la entrada y convertir a numpy array sin nombres
-    Orden: ['Pclass', 'Sex', 'Age', 'Embarked_C', 'Embarked_Q', 'Embarked_S']
-    """
-    
-    # Crear array en el orden correcto
+    """Preprocesar entrada para el modelo"""
     input_data = [
-        int(pclass),                    # Pclass
-        1 if sex == 'male' else 0,      # Sex (male=1, female=0)
-        float(age),                     # Age
-        1 if embarked == 'C' else 0,    # Embarked_C
-        1 if embarked == 'Q' else 0,    # Embarked_Q
-        1 if embarked == 'S' else 0     # Embarked_S
+        int(pclass),
+        1 if sex == 'male' else 0,
+        float(age),
+        1 if embarked == 'C' else 0,
+        1 if embarked == 'Q' else 0,
+        1 if embarked == 'S' else 0
     ]
-    
-    print(f"Datos preprocesados: {input_data}")
     return np.array([input_data])
 
 def index(request):
-    """
-    Vista principal para el formulario de predicción
-    """
+    """Vista principal"""
     if request.method == 'POST':
-        print("Formulario recibido via POST")
         form = TitanicForm(request.POST)
         
         if form.is_valid():
-            print("Formulario válido")
-            
-            # Obtener datos limpios del formulario
             pclass = form.cleaned_data['pclass']
             sex = form.cleaned_data['sex']
             age = form.cleaned_data['age']
             embarked = form.cleaned_data['embarked']
             
-            print(f" Datos del usuario: Clase={pclass}, Sexo={sex}, Edad={age}, Embarque={embarked}")
-            
-            # Cargar modelo y recursos
             model, scaler, feature_order = load_model()
             
             if model and scaler:
                 try:
-                    # Preprocesar entrada como numpy array
                     input_array = preprocess_input(pclass, sex, age, embarked)
-                    
-                    # Escalar los datos
                     input_scaled = scaler.transform(input_array)
-                    print("Datos escalados correctamente")
                     
-                    # Realizar predicción
                     prediction = model.predict(input_scaled)[0]
                     probability = model.predict_proba(input_scaled)[0]
                     
-                    print(f"Predicción: {prediction}, Probabilidades: {probability}")
-                    
-                    # Interpretar resultados
                     survived = bool(prediction)
-                    survival_prob = probability[1] * 100  # Probabilidad de sobrevivir
-                    death_prob = probability[0] * 100     # Probabilidad de no sobrevivir
+                    survival_prob = probability[1] * 100
+                    death_prob = probability[0] * 100
                     
-                    # Obtener etiquetas legibles para mostrar
                     pclass_label = dict(form.fields['pclass'].choices).get(pclass)
                     sex_label = dict(form.fields['sex'].choices).get(sex)
                     embarked_label = dict(form.fields['embarked'].choices).get(embarked)
                     
-                    print(f" Etiquetas: Clase={pclass_label}, Sexo={sex_label}, Embarque={embarked_label}")
-                    
-                    # Preparar contexto para el template
                     context = {
                         'survived': survived,
                         'survival_prob': round(survival_prob, 2),
@@ -98,193 +72,84 @@ def index(request):
                         'es_ejemplo': False
                     }
                     
-                    print("Enviando resultado al template")
                     return render(request, 'prediction_app/result.html', context)
                     
                 except Exception as e:
-                    error_message = f"Error en la predicción: {str(e)}"
-                    print(f"Error en predicción: {e}")
-                    
                     return render(request, 'prediction_app/index.html', {
                         'form': form,
-                        'error_message': error_message
+                        'error_message': f'Error en predicción: {str(e)}'
                     })
             else:
-                error_message = "Modelo no disponible. Por favor, contacte al administrador."
-                print(" Modelo no disponible")
-                
                 return render(request, 'prediction_app/index.html', {
                     'form': form,
-                    'error_message': error_message
+                    'error_message': 'Modelo no disponible'
                 })
         else:
-            print("Formulario inválido")
             return render(request, 'prediction_app/index.html', {
                 'form': form,
-                'error_message': 'Por favor, corrige los errores en el formulario.'
+                'error_message': 'Por favor corrige los errores'
             })
     
     else:
-        # GET request - mostrar formulario vacío
-        print("Mostrando formulario vacío (GET)")
         form = TitanicForm()
     
     return render(request, 'prediction_app/index.html', {'form': form})
 
 def ejemplo_sobrevive(request):
-    """
-    Vista que precarga datos de ejemplo que SÍ sobreviven
-    Mujer, Primera Clase, 28 años, Cherbourg
-    """
-    print("Cargando ejemplo que SÍ sobrevive")
-    
-    # Datos que generalmente sobreviven
-    initial_data = {
-        'pclass': '1',
-        'sex': 'female', 
-        'age': 28,
-        'embarked': 'C'
-    }
-    
-    form = TitanicForm(initial=initial_data)
-    
-    # Cargar modelo y recursos
-    model, scaler, feature_order = load_model()
-    
-    if model and scaler:
-        try:
-            # Preprocesar entrada como numpy array
-            input_array = preprocess_input('1', 'female', 28, 'C')
-            
-            # Escalar los datos
-            input_scaled = scaler.transform(input_array)
-            print("Datos de ejemplo escalados correctamente")
-            
-            # Realizar predicción
-            prediction = model.predict(input_scaled)[0]
-            probability = model.predict_proba(input_scaled)[0]
-            
-            print(f" Predicción ejemplo: {prediction}, Probabilidades: {probability}")
-            
-            # Interpretar resultados
-            survived = bool(prediction)
-            survival_prob = probability[1] * 100
-            death_prob = probability[0] * 100
-            
-            # Preparar contexto para el template
-            context = {
-                'survived': survived,
-                'survival_prob': round(survival_prob, 2),
-                'death_prob': round(death_prob, 2),
-                'age': 28,
-                'pclass': 'Primera Clase',
-                'sex': 'Mujer',
-                'embarked': 'Cherbourg',
-                'es_ejemplo': True
-            }
-            
-            print("Enviando resultado de ejemplo al template")
-            return render(request, 'prediction_app/result.html', context)
-            
-        except Exception as e:
-            error_message = f"Error en la predicción del ejemplo: {str(e)}"
-            print(f"Error en predicción de ejemplo: {e}")
-            
-            # Si hay error, mostrar el formulario precargado
-            return render(request, 'prediction_app/index.html', {
-                'form': form,
-                'error_message': error_message
-            })
-    
-    # Si el modelo no está disponible
-    error_message = 'Modelo no disponible. No se puede realizar la predicción.'
-    print(" Modelo no disponible para ejemplo")
-    
-    return render(request, 'prediction_app/index.html', {
-        'form': form,
-        'error_message': error_message
-    })
+    """Ejemplo que sobrevive"""
+    initial_data = {'pclass': '1', 'sex': 'female', 'age': 28, 'embarked': 'C'}
+    return process_ejemplo(request, initial_data, 'Mujer', 'Primera Clase', 'Cherbourg')
 
 def ejemplo_no_sobrevive(request):
-    """
-    Vista que precarga datos de ejemplo que NO sobreviven
-    Hombre, Tercera Clase, 35 años, Southampton
-    """
-    print("Cargando ejemplo que NO sobrevive")
-    
-    # Datos que generalmente NO sobreviven
-    initial_data = {
-        'pclass': '3',
-        'sex': 'male', 
-        'age': 35,
-        'embarked': 'S'
-    }
-    
-    form = TitanicForm(initial=initial_data)
-    
-    # Cargar modelo y recursos
+    """Ejemplo que no sobrevive"""
+    initial_data = {'pclass': '3', 'sex': 'male', 'age': 35, 'embarked': 'S'}
+    return process_ejemplo(request, initial_data, 'Hombre', 'Tercera Clase', 'Southampton')
+
+def process_ejemplo(request, initial_data, sex_label, pclass_label, embarked_label):
+    """Procesar ejemplo común"""
     model, scaler, feature_order = load_model()
     
     if model and scaler:
         try:
-            # Preprocesar entrada como numpy array
-            input_array = preprocess_input('3', 'male', 35, 'S')
-            
-            # Escalar los datos
+            input_array = preprocess_input(
+                initial_data['pclass'], 
+                initial_data['sex'], 
+                initial_data['age'], 
+                initial_data['embarked']
+            )
             input_scaled = scaler.transform(input_array)
-            print("Datos de ejemplo (no sobrevive) escalados correctamente")
             
-            # Realizar predicción
             prediction = model.predict(input_scaled)[0]
             probability = model.predict_proba(input_scaled)[0]
             
-            print(f" Predicción ejemplo (no): {prediction}, Probabilidades: {probability}")
-            
-            # Interpretar resultados
-            survived = bool(prediction)
-            survival_prob = probability[1] * 100
-            death_prob = probability[0] * 100
-            
-            # Preparar contexto para el template
             context = {
-                'survived': survived,
-                'survival_prob': round(survival_prob, 2),
-                'death_prob': round(death_prob, 2),
-                'age': 35,
-                'pclass': 'Tercera Clase',
-                'sex': 'Hombre',
-                'embarked': 'Southampton',
+                'survived': bool(prediction),
+                'survival_prob': round(probability[1] * 100, 2),
+                'death_prob': round(probability[0] * 100, 2),
+                'age': initial_data['age'],
+                'pclass': pclass_label,
+                'sex': sex_label,
+                'embarked': embarked_label,
                 'es_ejemplo': True
             }
             
-            print("Enviando resultado de ejemplo (no) al template")
             return render(request, 'prediction_app/result.html', context)
             
         except Exception as e:
-            error_message = f"Error en la predicción del ejemplo: {str(e)}"
-            print(f" Error en predicción de ejemplo (no): {e}")
-            
-            # Si hay error, mostrar el formulario precargado
+            form = TitanicForm(initial=initial_data)
             return render(request, 'prediction_app/index.html', {
                 'form': form,
-                'error_message': error_message
+                'error_message': f'Error: {str(e)}'
             })
     
-    # Si el modelo no está disponible
-    error_message = 'Modelo no disponible. No se puede realizar la predicción.'
-    print(" Modelo no disponible para ejemplo (no)")
-    
+    form = TitanicForm(initial=initial_data)
     return render(request, 'prediction_app/index.html', {
         'form': form,
-        'error_message': error_message
+        'error_message': 'Modelo no disponible'
     })
 
 def estadisticas(request):
-    """
-    Vista opcional para mostrar estadísticas del Titanic
-    """
-    print("📊 Mostrando estadísticas")
-    
+    """Vista de estadísticas"""
     estadisticas_data = {
         'supervivencia_general': '38%',
         'mujeres_sobrevivieron': '74%',
@@ -292,7 +157,6 @@ def estadisticas(request):
         'primera_clase_sobrevivio': '63%',
         'segunda_clase_sobrevivio': '47%',
         'tercera_clase_sobrevivio': '24%',
-        'niños_sobrevivieron': '52%'
     }
     
     return render(request, 'prediction_app/estadisticas.html', {

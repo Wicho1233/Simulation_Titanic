@@ -2,6 +2,9 @@
 
 {% block content %}
 <div class="card shadow">
+    <div class="card-header bg-primary text-white">
+        <h4 class="mb-0">Titanic Predictor</h4>
+    </div>
     <div class="card-body">
         {% if error_message %}
         <div class="alert alert-danger" role="alert">
@@ -9,41 +12,47 @@
         </div>
         {% endif %}
 
-        <form method="post">
+        <form method="post" id="predictionForm">
             {% csrf_token %}
             
             <div class="mb-3">
-                <label class="form-label">Clase</label>
+                <label class="form-label"><strong>Clase del Pasajero</strong></label>
                 {{ form.pclass }}
             </div>
             
             <div class="mb-3">
-                <label class="form-label">Sexo</label>
+                <label class="form-label"><strong>Sexo</strong></label>
                 {{ form.sex }}
             </div>
 
             <div class="mb-3">
-                <label class="form-label">Edad</label>
+                <label class="form-label"><strong>Edad</strong></label>
                 {{ form.age }}
+                <small class="form-text text-muted"></small>
             </div>
             
             <div class="mb-4">
-                <label class="form-label">Puerto de Embarque</label>
+                <label class="form-label"><strong>Puerto de Embarque</strong></label>
                 {{ form.embarked }}
             </div>
 
-            <button type="submit" class="btn btn-primary w-100 mb-3">
+            <button type="submit" class="btn btn-primary btn-lg w-100 mb-3">
                 Ver Resultado
             </button>
-            
-            <div class="d-grid gap-2">
-               
-            </div>
         </form>
+
+        <div class="mt-4">
+        </div>
     </div>
 </div>
 
-<div class="card mt-3">
 
+<div class="card mt-3">
+    <div class="card-body">
+        <small class="text-muted">
+            <strong>Nota:</strong> Este predictor usa machine learning basado en datos reales del Titanic.
+            Los resultados son estimaciones probabilísticas.
+        </small>
+    </div>
 </div>
 {% endblock %}
