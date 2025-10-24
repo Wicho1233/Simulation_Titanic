@@ -7,7 +7,6 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-desarrollo-local-solo
 
 DEBUG = os.environ.get('DEBUG', 'True').lower() == 'true'
 
-ALLOWED_HOSTS = ['*', '.railway.app', 'localhost', '127.0.0.1']
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -82,6 +81,20 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 if not DEBUG:
-    SECURE_SSL_REDIRECT = True
-    SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SAMESITE = 'Lax'
+    SESSION_COOKIE_SAMESITE = 'Lax'
+
+# Agrega tu dominio de Railway a ALLOWED_HOSTS
+ALLOWED_HOSTS = [
+    'simulationstatus-production.up.railway.app',
+    'localhost',
+    '127.0.0.1',
+]
+
+# Configura CSRF_TRUSTED_ORIGINS para HTTPS
+CSRF_TRUSTED_ORIGINS = [
+    'https://simulationstatus-production.up.railway.app',
+    'https://*.railway.app',
+]
