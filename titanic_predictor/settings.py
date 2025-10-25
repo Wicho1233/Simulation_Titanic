@@ -9,6 +9,14 @@ DEBUG = os.environ.get('DEBUG', 'True').lower() == 'true'
 
 ALLOWED_HOSTS = ['*', '.railway.app', 'localhost', '127.0.0.1']
 
+# ⚡️ AGREGA ESTAS 4 LÍNEAS PARA CSRF
+CSRF_TRUSTED_ORIGINS = [
+    'https://simulationtitanic-production.up.railway.app',
+    'https://*.up.railway.app',
+    'https://*.railway.app',
+]
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
